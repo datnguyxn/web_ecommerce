@@ -1,5 +1,33 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-    baseURL: "https:///v1",
+    baseURL: "http://127.0.0.1:8000/api",
 });
+
+axiosClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem("ACCESS_TOKEN");
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+axiosClient.interceptors.response.use(
+    (response) => {
+        if (response && response.data) {
+            return response.data;
+        }
+        return response;
+    },
+    (error) => {
+        try {
+            const {response} = error;
+            if (response.status === 401) {
+                localStorage.removeItem("ACCESS_TOKEN");
+            } 
+        } catch (error) {
+            console.log("Failed to fetch data: ", error);
+        }
+        throw error;
+    }
+);
+
+export default axiosClient;
